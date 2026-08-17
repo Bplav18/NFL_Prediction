@@ -1,0 +1,466 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NFL Predictive Market</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0A0C10;
+    --bg-raised: #12151B;
+    --bg-row-hover: #171B23;
+    --border: #232833;
+    --text: #E8E9ED;
+    --text-dim: #8A909C;
+    --text-faint: #565C68;
+    --accent: #3D8BFF;
+    --accent-dim: #3D8BFF33;
+    --green: #3FBF7F;
+    --green-dim: #3FBF7F22;
+    --red: #E5484D;
+    --red-dim: #E5484D22;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Space Grotesk', sans-serif;
+    min-height: 100vh;
+    padding: 32px 24px 80px;
+  }
+
+  .mono { font-family: 'IBM Plex Mono', monospace; font-variant-numeric: tabular-nums; }
+
+  .wrap { max-width: 1040px; margin: 0 auto; }
+
+  /* ---------- Header ---------- */
+  header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    flex-wrap: wrap;
+    gap: 16px;
+    margin-bottom: 28px;
+    padding-bottom: 20px;
+    border-bottom: 1px solid var(--border);
+  }
+  .brand-eyebrow {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 6px;
+  }
+  h1 {
+    font-size: 26px;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+  }
+  .subtitle {
+    color: var(--text-dim);
+    font-size: 13px;
+    margin-top: 4px;
+    max-width: 480px;
+    line-height: 1.5;
+  }
+  .status-dot {
+    display: inline-block;
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: var(--green);
+    margin-right: 6px;
+    box-shadow: 0 0 6px var(--green);
+  }
+  #conn-status {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px;
+    color: var(--text-dim);
+  }
+
+  /* ---------- Stat cards ---------- */
+  .stats-row {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    gap: 1px;
+    background: var(--border);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    overflow: hidden;
+    margin-bottom: 32px;
+  }
+  .stat-card {
+    background: var(--bg-raised);
+    padding: 16px 18px;
+  }
+  .stat-label {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--text-faint);
+    margin-bottom: 8px;
+  }
+  .stat-value {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 24px;
+    font-weight: 500;
+  }
+  .stat-value.accent { color: var(--accent); }
+  .stat-sub {
+    font-size: 11px;
+    color: var(--text-dim);
+    margin-top: 4px;
+  }
+
+  /* ---------- Insight callout ---------- */
+  .insight {
+    background: var(--bg-raised);
+    border: 1px solid var(--border);
+    border-left: 3px solid var(--accent);
+    border-radius: 6px;
+    padding: 14px 18px;
+    font-size: 13px;
+    line-height: 1.6;
+    color: var(--text-dim);
+    margin-bottom: 32px;
+  }
+  .insight strong { color: var(--text); font-weight: 500; }
+
+  /* ---------- Filters ---------- */
+  .filters {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    margin-bottom: 16px;
+    flex-wrap: wrap;
+  }
+  .filters label {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px;
+    color: var(--text-faint);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+  }
+  select, input {
+    background: var(--bg-raised);
+    border: 1px solid var(--border);
+    color: var(--text);
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 12px;
+    padding: 7px 10px;
+    border-radius: 5px;
+    outline: none;
+  }
+  select:focus, input:focus { border-color: var(--accent); }
+
+  /* ---------- Table ---------- */
+  .table-wrap {
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+  table { width: 100%; border-collapse: collapse; }
+  thead th {
+    text-align: left;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.07em;
+    text-transform: uppercase;
+    color: var(--text-faint);
+    padding: 10px 14px;
+    background: var(--bg-raised);
+    border-bottom: 1px solid var(--border);
+    white-space: nowrap;
+  }
+  tbody tr {
+    border-bottom: 1px solid var(--border);
+    transition: background 0.1s ease;
+  }
+  tbody tr:last-child { border-bottom: none; }
+  tbody tr:hover { background: var(--bg-row-hover); }
+  td {
+    padding: 12px 14px;
+    font-size: 13px;
+    vertical-align: middle;
+  }
+  .matchup { font-weight: 500; }
+  .matchup .away { color: var(--text-dim); }
+  .matchup .at { color: var(--text-faint); margin: 0 4px; font-weight: 400; }
+  .season-week {
+    color: var(--text-faint);
+    font-size: 11px;
+    font-family: 'IBM Plex Mono', monospace;
+  }
+  .result-pill {
+    display: inline-block;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 10px;
+    padding: 2px 7px;
+    border-radius: 4px;
+    letter-spacing: 0.03em;
+    background: var(--border);
+    color: var(--text-dim);
+  }
+
+  .prob-cell { font-family: 'IBM Plex Mono', monospace; font-size: 12px; }
+
+  /* Signature element: probability comparison bar */
+  .prob-bar-wrap { display: flex; align-items: center; gap: 8px; min-width: 150px; }
+  .prob-bar {
+    position: relative;
+    flex: 1;
+    height: 4px;
+    background: var(--border);
+    border-radius: 2px;
+  }
+  .prob-tick {
+    position: absolute;
+    top: 50%;
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    transform: translate(-50%, -50%);
+    border: 2px solid var(--bg);
+  }
+  .prob-tick.model { background: var(--accent); z-index: 2; }
+  .prob-tick.market { background: var(--text-faint); z-index: 1; }
+  .prob-legend {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 10px;
+    color: var(--text-faint);
+    white-space: nowrap;
+  }
+  .prob-legend .model-val { color: var(--accent); }
+
+  .edge-cell {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 13px;
+    font-weight: 600;
+    text-align: right;
+  }
+  .edge-cell.pos { color: var(--green); }
+  .edge-cell.neg { color: var(--red); }
+  .edge-cell .arrow { font-size: 10px; margin-right: 3px; }
+
+  .empty-state, .loading-state {
+    padding: 60px 20px;
+    text-align: center;
+    color: var(--text-faint);
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 12px;
+  }
+
+  footer {
+    max-width: 1040px;
+    margin: 24px auto 0;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px;
+    color: var(--text-faint);
+    line-height: 1.6;
+  }
+
+  @media (max-width: 640px) {
+    .prob-legend { display: none; }
+    thead th:nth-child(2), td:nth-child(2) { display: none; }
+    .prob-bar-wrap { min-width: 90px; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <div>
+      <div class="brand-eyebrow">NFL &middot; Predictive Analytics</div>
+      <h1>Model vs. Market</h1>
+      <div class="subtitle">Comparing ML-projected win probabilities against de-vigged market-implied odds, out-of-fold via walk-forward validation.</div>
+    </div>
+    <div id="conn-status"><span class="status-dot"></span>connecting&hellip;</div>
+  </header>
+
+  <div class="stats-row" id="stats-row">
+    <div class="stat-card"><div class="stat-label">Loading</div><div class="stat-value">&mdash;</div></div>
+  </div>
+
+  <div class="insight" id="insight" style="display:none;"></div>
+
+  <div class="filters">
+    <label for="season-filter">Season</label>
+    <select id="season-filter"><option value="">All</option></select>
+
+    <label for="edge-filter">Min |edge|</label>
+    <select id="edge-filter">
+      <option value="0">Any</option>
+      <option value="0.05">5%+</option>
+      <option value="0.10" selected>10%+</option>
+      <option value="0.20">20%+</option>
+    </select>
+
+    <label for="limit-filter">Show</label>
+    <select id="limit-filter">
+      <option value="25">25</option>
+      <option value="50" selected>50</option>
+      <option value="100">100</option>
+    </select>
+  </div>
+
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>Matchup</th>
+          <th>Season / Wk</th>
+          <th>Result</th>
+          <th>Model vs Market</th>
+          <th style="text-align:right;">Edge</th>
+        </tr>
+      </thead>
+      <tbody id="table-body">
+        <tr><td colspan="5" class="loading-state">Loading predictions&hellip;</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <footer>
+    Edge = model-implied home win probability minus de-vigged market-implied home win probability.<br>
+    Positive edge (green) &mdash; model rates the home team more likely than the market does. Negative edge (red) &mdash; model favors the away team relative to market.
+  </footer>
+
+</div>
+
+<script>
+  const API_BASE = window.location.protocol === 'file:'
+    ? 'http://127.0.0.1:8000'
+    : window.location.origin;
+
+  const statsRow = document.getElementById('stats-row');
+  const insightBox = document.getElementById('insight');
+  const tableBody = document.getElementById('table-body');
+  const connStatus = document.getElementById('conn-status');
+  const seasonFilter = document.getElementById('season-filter');
+  const edgeFilter = document.getElementById('edge-filter');
+  const limitFilter = document.getElementById('limit-filter');
+
+  function setConnStatus(ok, msg) {
+    connStatus.innerHTML = `<span class="status-dot" style="background:${ok ? 'var(--green)' : 'var(--red)'};box-shadow:0 0 6px ${ok ? 'var(--green)' : 'var(--red)'}"></span>${msg}`;
+  }
+
+  async function fetchJSON(path) {
+    const res = await fetch(`${API_BASE}${path}`);
+    if (!res.ok) throw new Error(`${res.status} ${res.statusText}`);
+    return res.json();
+  }
+
+  function renderStats(stats) {
+    const cards = [
+      { label: 'Games evaluated', value: stats.n_games.toLocaleString(), sub: `${stats.seasons[0]}\u2013${stats.seasons[stats.seasons.length - 1]}, out-of-fold` },
+      { label: 'Model ROC-AUC', value: stats.model_roc_auc.toFixed(3), sub: 'vs market' },
+      { label: 'Market ROC-AUC', value: stats.market_roc_auc.toFixed(3), sub: 'de-vigged odds', accent: true },
+      { label: 'Model accuracy', value: (stats.model_accuracy * 100).toFixed(1) + '%', sub: '>50% threshold' },
+      { label: 'Market accuracy', value: (stats.market_accuracy * 100).toFixed(1) + '%', sub: '>50% threshold', accent: true },
+    ];
+    statsRow.innerHTML = cards.map(c => `
+      <div class="stat-card">
+        <div class="stat-label">${c.label}</div>
+        <div class="stat-value ${c.accent ? 'accent' : ''}">${c.value}</div>
+        <div class="stat-sub">${c.sub}</div>
+      </div>
+    `).join('');
+
+    if (stats.model_accuracy_on_high_disagreement_games !== null) {
+      const pct = (stats.model_accuracy_on_high_disagreement_games * 100).toFixed(1);
+      insightBox.style.display = 'block';
+      insightBox.innerHTML = `On the <strong>${stats.n_high_disagreement_games} games</strong> where the model disagreed with the market by more than 5 points, following the model's disagreement picked the winner <strong>${pct}% of the time</strong> &mdash; below the market's own ${(stats.market_accuracy * 100).toFixed(1)}% baseline accuracy. This is an expected, honest finding: sportsbook markets are highly efficient, and a next-step goal for this project is closing that gap with richer features.`;
+    }
+
+    seasonFilter.innerHTML = '<option value="">All</option>' +
+      stats.seasons.map(s => `<option value="${s}">${s}</option>`).join('');
+  }
+
+  function probBarRow(modelProb, marketProb) {
+    const modelPct = (modelProb * 100).toFixed(1);
+    const marketPct = (marketProb * 100).toFixed(1);
+    return `
+      <div class="prob-bar-wrap">
+        <div class="prob-legend"><span class="model-val">${modelPct}</span> / ${marketPct}</div>
+        <div class="prob-bar">
+          <div class="prob-tick market" style="left:${marketPct}%;"></div>
+          <div class="prob-tick model" style="left:${modelPct}%;"></div>
+        </div>
+      </div>
+    `;
+  }
+
+  function renderTable(games) {
+    if (!games.length) {
+      tableBody.innerHTML = '<tr><td colspan="5" class="empty-state">No games match these filters.</td></tr>';
+      return;
+    }
+    tableBody.innerHTML = games.map(g => {
+      const edgePositive = g.edge > 0;
+      const homeWon = g.home_win === 1;
+      return `
+        <tr>
+          <td>
+            <div class="matchup"><span class="away">${g.away_team}</span><span class="at">@</span>${g.home_team}</div>
+          </td>
+          <td class="season-week">${g.season} &middot; wk ${g.week}</td>
+          <td><span class="result-pill">${homeWon ? g.home_team : g.away_team} won</span></td>
+          <td>${probBarRow(g.model_home_prob, g.market_home_prob)}</td>
+          <td class="edge-cell ${edgePositive ? 'pos' : 'neg'}">
+            <span class="arrow">${edgePositive ? '\u25B2' : '\u25BC'}</span>${Math.abs(g.edge_pct).toFixed(1)}%
+          </td>
+        </tr>
+      `;
+    }).join('');
+  }
+
+  async function loadGames() {
+    const season = seasonFilter.value;
+    const minEdge = edgeFilter.value;
+    const limit = limitFilter.value;
+    let path = `/predictions/edge?min_abs_edge=${minEdge}&limit=${limit}`;
+    if (season) path += `&season=${season}`;
+
+    tableBody.innerHTML = '<tr><td colspan="5" class="loading-state">Loading&hellip;</td></tr>';
+    try {
+      const games = await fetchJSON(path);
+      renderTable(games);
+    } catch (e) {
+      tableBody.innerHTML = `<tr><td colspan="5" class="empty-state">Failed to load games: ${e.message}</td></tr>`;
+    }
+  }
+
+  async function init() {
+    try {
+      const stats = await fetchJSON('/predictions/stats');
+      setConnStatus(true, 'connected');
+      renderStats(stats);
+      await loadGames();
+    } catch (e) {
+      setConnStatus(false, 'API unreachable');
+      statsRow.innerHTML = `<div class="stat-card" style="grid-column:1/-1;">
+        <div class="stat-label" style="color:var(--red);">Connection failed</div>
+        <div class="stat-sub" style="margin-top:6px;">
+          Couldn't reach the API at <span class="mono">${API_BASE}</span>. Make sure it's running:
+          <br><span class="mono" style="color:var(--text-dim);">uvicorn api.main:app --reload</span>
+        </div>
+      </div>`;
+      tableBody.innerHTML = '';
+    }
+  }
+
+  seasonFilter.addEventListener('change', loadGames);
+  edgeFilter.addEventListener('change', loadGames);
+  limitFilter.addEventListener('change', loadGames);
+
+  init();
+</script>
+</body>
+</html>
